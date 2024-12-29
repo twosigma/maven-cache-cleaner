@@ -18,12 +18,14 @@ on:
 
 jobs:
   check-dist:
-    runs-on: rez
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - run: dawn setup
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - id: npm-cache-dir
         shell: bash

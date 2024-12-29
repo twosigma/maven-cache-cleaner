@@ -9,14 +9,18 @@ on: # rebuild any PRs and main branch changes
 
 jobs:
   build: # make sure build/ci work properly
-    runs-on: rez
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: dawn setup
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - id: npm-cache-dir
         shell: bash
-        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
-      - uses: actions/cache@v3
+        run: echo "dir=$(npm config get cache)" >> "${GITHUB_OUTPUT}"
+      - uses: actions/cache@v4
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
@@ -27,7 +31,7 @@ jobs:
       - run: |
           npm run all
   test-setup: # have the action save the cache
-    runs-on: rez
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
@@ -46,7 +50,7 @@ jobs:
           cat "$HOME/.m2/repository/com/twosigma/foo/foo.pom"
 
   test-validation: # validate the cache has the correct contents
-    runs-on: rez
+    runs-on: ubuntu-latest
     needs: [test-setup]
     steps:
       - uses: actions/checkout@v4
