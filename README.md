@@ -14,11 +14,11 @@ The action cleaning mechanism is inspired by this [StackOverflow answer](https:/
 Add these near the top of the workflow:
 
 ```yaml
-uses: actions/cache@v4
-with:
-  path: ~/.m2/repository
-  key: ${{ runner.os }}-maven-build # Or any other key you want
-uses: twosigma/maven-cache-cleaner@v1
+- uses: actions/cache@v4
+  with:
+    path: ~/.m2/repository
+    key: ${{ runner.os }}-maven-build # Or any other key you want
+- uses: twosigma/maven-cache-cleaner@v1
 ```
 
 Any files not accessed within the `~/.m2` directory after the `twosigma/maven-cache-cleaner` step will be deleted at the end of the action, before `actions/cache` saves the directory.
