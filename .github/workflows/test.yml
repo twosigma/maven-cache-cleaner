@@ -20,7 +20,7 @@ jobs:
       - id: npm-cache-dir
         shell: bash
         run: echo "dir=$(npm config get cache)" >> "${GITHUB_OUTPUT}"
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ${{ steps.npm-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.m2/repository
           key: test-${{ github.run_id }}-${{ github.run_attempt }}
@@ -54,7 +54,7 @@ jobs:
     needs: [test-setup]
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.m2/repository
           key: test-${{ github.run_id }}-${{ github.run_attempt }}
