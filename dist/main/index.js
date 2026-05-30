@@ -25719,23 +25719,26 @@ function shouldCleanup(directory) {
             core.warning('No detected loaded maven local repository. Will skip cleanup.');
             return false;
         }
-        // Create a test file
-        const testFilePath = path.join(directory, '.atime-test-file');
-        fs.writeFileSync(testFilePath, 'test');
-        // sleep for 50 ms
-        yield new Promise(r => setTimeout(r, 50));
-        // Access the file to update atime
-        fs.readFileSync(testFilePath);
-        // Get the stats of the file
-        const stats = fs.statSync(testFilePath);
-        // Clean up the test file
-        fs.unlinkSync(testFilePath);
-        if (stats.atimeMs !== stats.mtimeMs) {
-            return true;
+        const testDirectoryPath = fs.mkdtempSync(path.join(directory, '.atime-test-'));
+        const testFilePath = path.join(testDirectoryPath, 'probe');
+        try {
+            fs.writeFileSync(testFilePath, 'test');
+            // sleep for 50 ms
+            yield new Promise(r => setTimeout(r, 50));
+            // Access the file to update atime
+            fs.readFileSync(testFilePath);
+            // Get the stats of the file
+            const stats = fs.statSync(testFilePath);
+            if (stats.atimeMs !== stats.mtimeMs) {
+                return true;
+            }
+            else {
+                core.warning('The filesystem does not support atime. No cleanup will be performed.');
+                return false;
+            }
         }
-        else {
-            core.warning('The filesystem does not support atime. No cleanup will be performed.');
-            return false;
+        finally {
+            fs.rmSync(testDirectoryPath, { recursive: true, force: true });
         }
     });
 }

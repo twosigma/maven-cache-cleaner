@@ -29,28 +29,30 @@ async function shouldCleanup(directory: string): Promise<boolean> {
     )
     return false
   }
-  // Create a test file
-  const testFilePath = path.join(directory, '.atime-test-file')
-  fs.writeFileSync(testFilePath, 'test')
+  const testDirectoryPath = fs.mkdtempSync(path.join(directory, '.atime-test-'))
+  const testFilePath = path.join(testDirectoryPath, 'probe')
 
-  // sleep for 50 ms
-  await new Promise(r => setTimeout(r, 50))
+  try {
+    fs.writeFileSync(testFilePath, 'test')
 
-  // Access the file to update atime
-  fs.readFileSync(testFilePath)
+    // sleep for 50 ms
+    await new Promise(r => setTimeout(r, 50))
 
-  // Get the stats of the file
-  const stats = fs.statSync(testFilePath)
+    // Access the file to update atime
+    fs.readFileSync(testFilePath)
 
-  // Clean up the test file
-  fs.unlinkSync(testFilePath)
-  if (stats.atimeMs !== stats.mtimeMs) {
-    return true
-  } else {
-    core.warning(
-      'The filesystem does not support atime. No cleanup will be performed.'
-    )
-    return false
+    // Get the stats of the file
+    const stats = fs.statSync(testFilePath)
+    if (stats.atimeMs !== stats.mtimeMs) {
+      return true
+    } else {
+      core.warning(
+        'The filesystem does not support atime. No cleanup will be performed.'
+      )
+      return false
+    }
+  } finally {
+    fs.rmSync(testDirectoryPath, {recursive: true, force: true})
   }
 }
 

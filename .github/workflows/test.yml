@@ -44,6 +44,7 @@ jobs:
           touch "$HOME/.m2/repository/com/twosigma/foo/foo.pom"
           mkdir -p "$HOME/.m2/repository/com/twosigma/bar"
           touch "$HOME/.m2/repository/com/twosigma/bar/bar.pom"
+          printf 'keep-me\n' > "$HOME/.m2/repository/.atime-test-file"
       - uses: ./
       - name: Access the foo file to update its atime
         run: |
@@ -74,5 +75,13 @@ jobs:
             echo "bar directory is removed after post step"
           else
             echo "bar directory still exists after post step"
+            exit 1
+          fi
+
+          # Check that an existing file with the old probe name survives
+          if [ "$(cat "$HOME/.m2/repository/.atime-test-file")" = "keep-me" ]; then
+            echo ".atime-test-file survives after post step"
+          else
+            echo ".atime-test-file is missing or modified after post step"
             exit 1
           fi
