@@ -25724,7 +25724,7 @@ function shouldCleanup(directory) {
         try {
             fs.writeFileSync(testFilePath, 'test');
             // sleep for 50 ms
-            yield new Promise(r => setTimeout(r, 50));
+            yield new Promise((r) => setTimeout(r, 50));
             // Access the file to update atime
             fs.readFileSync(testFilePath);
             // Get the stats of the file
