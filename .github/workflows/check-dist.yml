@@ -59,3 +59,56 @@ jobs:
         with:
           name: dist
           path: dist/
+
+  fix-dist:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Rebuild dist/ and commit changes
+        run: |
+          npm run build
+          npm run package
+
+          if ! git diff --quiet -- dist/; then
+            FIX_BRANCH="fix-${{ github.event.pull_request.number }}-dist"
+            git switch --create $FIX_BRANCH
+
+            git add dist/
+            git commit --message "Auto-fix: Rebuild dist/ directory."
+            git push --force origin $FIX_BRANCH
+
+            echo "dist/ fixes have been pushed to the $FIX_BRANCH branch."
+            exit 1
+          else
+            echo "dist/ directory is already up to date"
+          fi
